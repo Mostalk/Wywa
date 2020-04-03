@@ -4,8 +4,7 @@ import math
 
 image = cv2.imread("checks/check.jpg")
 
-
-def processImage(imgage):
+def processImage(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     edged = cv2.Canny(gray, 10, 255)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (50, 50))
@@ -63,5 +62,9 @@ def processImage(imgage):
     cv2.imshow("1", image)
     cv2.imshow("2", edged)
     cv2.imshow("3", threshold_image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+
+
+processImage(image)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
