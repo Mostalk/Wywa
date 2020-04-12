@@ -1,0 +1,26 @@
+<annotation>
+    <folder>checks</folder>
+    <filename>IMG_20200407_050459.jpg</filename>
+    <path>C:\Users\Mostalk\PycharmProjects\OpenCV\checks\IMG_20200407_050459.jpg</path>
+    <source>
+        <database>Unknown</database>
+    </source>
+    <size>
+        <width>3016</width>
+        <height>4032</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>check</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>473</xmin>
+            <ymin>263</ymin>
+            <xmax>2263</xmax>
+            <ymax>3813</ymax>
+        </bndbox>
+    </object>
+</annotation>

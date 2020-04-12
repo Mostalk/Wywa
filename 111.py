@@ -1,35 +1,54 @@
-import cv2
-from matplotlib import pyplot as plt
+from threading import Thread
 
-img = cv2.imread('checks/1.png', 0)
-img2 = img.copy()
-template = cv2.imread('checks/11.png', 0)
-w, h = template.shape[::-1]
+import mido
+from playsound import playsound
+import requests
+import time
 
-methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
-           'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
+music = r"SNA.mid"
 
-for meth in methods:
-    img = img2.copy()
-    method = eval(meth)
 
-    # Apply template Matching
-    res = cv2.matchTemplate(img, template, method)
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+class Decode(Thread):
+    def __init__(self):
+        """Инициализация потока"""
+        Thread.__init__(self)
 
-    # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
-    if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
-        top_left = min_loc
-    else:
-        top_left = max_loc
-    bottom_right = (top_left[0] + w, top_left[1] + h)
+    def run(self):
+        playsound(music)
 
-    cv2.rectangle(img, top_left, bottom_right, 255, 2)
 
-    plt.subplot(121), plt.imshow(res, cmap='Blues')
-    plt.title('Matching Result'), plt.xticks([]), plt.yticks([])
-    plt.subplot(122), plt.imshow(img, cmap='gray')
-    plt.title('Detected Point'), plt.xticks([]), plt.yticks([])
-    plt.suptitle(meth)
+class Play(Thread):
 
-    plt.show()
+    def __init__(self):
+        """Инициализация потока"""
+        Thread.__init__(self)
+
+    def run(self):
+        time.sleep(0.5)
+        mid = mido.MidiFile(music)
+        for msg in mid.play():
+            note = str(msg).split(" ")[2].split("=")[1]
+            volume = str(msg).split(" ")[3].split("=")[1]
+            res = int(note) * int(volume) / 100
+            print(note)
+            if int(res) <= 0:
+                res = 0
+            if 0 < int(res) <= 10:
+                res = 11
+            res = int(res)
+            res = str(res)
+            try:
+                req = requests.get("http://109.254.211.5:1234/brig_r/" + res + "/brig_g/" + res + "/brig_b/" + res)
+            except:
+                None
+
+
+def create_threads():
+    Playy = Play()
+    Decodee = Decode()
+    Playy.start()
+    Decodee.start()
+
+
+if __name__ == "__main__":
+    create_threads()

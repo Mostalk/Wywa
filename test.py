@@ -2,10 +2,16 @@ import re
 import cv2
 import numpy as np
 import pytesseract
+
+import main
 import proc as p
+import jamspell
 from pytesseract import Output
 from matplotlib import pyplot as plt
 from threading import Thread
+import re
+
+from main import corrector
 
 
 class MyThread(Thread):
@@ -17,79 +23,109 @@ class MyThread(Thread):
         self.src = image_src
 
     def run(self):
+        def processing(text):
+            summ = ["СУМА", "СУМ", "СУММА", "СЕМА"]
+            for sum in summ:
+                if sum in text['text']:
+                    su = open("log/sum.txt", 'a')
+                    ii = 1
+                    while text['text'][sum.index(sum) + ii] == "":
+                        ii = ii + 1
+                        print(sum.index(sum) + ii)
+                    su.write(text['text'][sum.index(sum) + ii])
+                    su.close()
+
         def teser(image):
+            dd = []
             # print("Recognition...")
             psm = self.name
-            print("Mode: " + psm + " start")
-            f = open("log/" + self.src + " - " + psm, "a")
+            # print("Mode: " + psm + " start")
+            f.write("====================" + re.sub("checks/", "", self.src) + "====================\n")
+            print("====================" + re.sub("checks/", "", self.src) + "====================\n")
             pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
             modes = ['get_grayscale', 'remove_noise', 'thresholding', 'dilate', 'erode', 'opening', 'canny']
             # print("--------" + "CLEAR" +"-------- " + str(psm) + " --------")
-            d = pytesseract.image_to_string(image, lang='rus+ukr', config="--psm " + str(
+            d = pytesseract.image_to_data(image, lang='rus+ukr', output_type=Output.STRING, config="--psm " + str(
                 psm))  # d = pytesseract.image_to_data(image, lang='rus', output_type=Output.DICT, config="--psm" + psm")
-            f.write("--------" + "CLEAR" + "-------- ")
-            f.write(d)
-            f.write("----------------")
-            # print("--------" + modes[0] + "-------- " + str(psm) + " --------")
+            cv2.drawContours(image, (d['width'], d['height']), 0, (0, 0, 255), 10)
+            cv2.imshow(self.src, main.resize(image)[0])
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+            # f.write("--------" + "CLEAR" + "--------\n")
+            # dd = d.split(" ")
+            print(d)
+            for word in d['text']:
+                try:
+                    # d = corrector(word)
+                    None
+                except:
+                    continue
+            for text in d['text']:
+                if not text == "":
+                    f.write(str(d['text']))
+            f.write("----------------\n")
+            '''# print("--------" + modes[0] + "-------- " + str(psm) + " --------")
             gray = p.get_grayscale(image)
             d = pytesseract.image_to_string(gray, lang='rus+ukr', config="--psm " + str(
                 psm))  # d = pytesseract.image_to_data(image, lang='rus', output_type=Output.DICT, config="--psm" + psm")
             # print(d)
-            f.write("--------" + modes[0] + "-------- ")
+            f.write("--------" + modes[0] + "--------\n")
             f.write(d)
-            f.write("----------------")
+            f.write("----------------\n")
             # print("--------" + modes[1] + "-------- " + str(psm) + " --------")
             noice = p.remove_noise(gray)
             d = pytesseract.image_to_string(noice, lang='rus+ukr', config="--psm " + str(
                 psm))  # d = pytesseract.image_to_data(image, lang='rus', output_type=Output.DICT, config="--psm" + psm")
             # print(d)
-            f.write("--------" + modes[1] + "-------- ")
+            f.write("--------" + modes[1] + "--------\n")
             f.write(d)
-            f.write("----------------")
+            f.write("----------------\n")
             # print("--------" + modes[2] + "-------- " + str(psm) + " --------")
             thresh = p.thresholding(gray)
             d = pytesseract.image_to_string(thresh, lang='rus+ukr', config="--psm " + str(
                 psm))  # d = pytesseract.image_to_data(image, lang='rus', output_type=Output.DICT, config="--psm" + psm")
             # print(d)
-            f.write("--------" + modes[2] + "-------- ")
+            f.write("--------" + modes[2] + "--------\n")
             f.write(d)
-            f.write("----------------")
+            f.write("----------------\n")
             # print("--------" + modes[3] + "-------- " + str(psm) + " --------")
             dilate = p.dilate(gray)
             d = pytesseract.image_to_string(dilate, lang='rus+ukr', config="--psm " + str(
                 psm))  # d = pytesseract.image_to_data(image, lang='rus', output_type=Output.DICT, config="--psm" + psm")
             # print(d)
-            f.write("--------" + modes[3] + "-------- ")
+            f.write("--------" + modes[3] + "--------\n")
             f.write(d)
-            f.write("----------------")
+            f.write("----------------\n")
             # print("--------" + modes[4] + "-------- " + str(psm) + " --------")
             erode = p.erode(gray)
             d = pytesseract.image_to_string(erode, lang='rus+ukr', config="--psm " + str(
                 psm))  # d = pytesseract.image_to_data(image, lang='rus', output_type=Output.DICT, config="--psm" + psm")
             # print(d)
-            f.write("--------" + modes[4] + "-------- ")
+            f.write("--------" + modes[4] + "--------\n")
             f.write(d)
-            f.write("----------------")
+            f.write("----------------\n")
             # print("--------" + modes[5] + "-------- " + str(psm) + " --------")
             opening = p.opening(gray)
             d = pytesseract.image_to_string(opening, lang='rus+ukr', config="--psm " + str(
                 psm))  # d = pytesseract.image_to_data(image, lang='rus', output_type=Output.DICT, config="--psm" + psm")
             # print(d)
-            f.write("--------" + modes[5] + "-------- ")
+            f.write("--------" + modes[5] + "--------\n")
             f.write(d)
-            f.write("----------------")
+            f.write("----------------\n")
             # print("--------" + modes[6] + "-------- " + str(psm) + " --------")
             canny = p.canny(gray)
             d = pytesseract.image_to_string(canny, lang='rus+ukr', config="--psm " + str(
                 psm))  # d = pytesseract.image_to_data(image, lang='rus', output_type=Output.DICT, config="--psm" + psm")
             # print(d)
-            f.write("--------" + modes[6] + "-------- ")
-            f.write(d)
-            f.write("----------------")
-            f.close()
-            print("Mode: " + psm + " end!")
+            f.write("--------" + modes[6] + "--------\n")
+            f.write(d)'''
 
+            print("Mode: " + psm + " end!")
+            return d
+
+        f = open("log/recognition.txt", "a")
         teser(self.image)
+        f.close()
 
     """  #n_boxes = len(d['text'])
     
@@ -117,9 +153,8 @@ class MyThread(Thread):
 
 
 def create_threads(image, image_src):
-    for i in [0, 2, 3, 5, 10, 11]:
-        name = i + 1
-        my_thread = MyThread(name, image, image_src)
+    name = 6
+    my_thread = MyThread(name, image, image_src)
         my_thread.start()
 
 
