@@ -1,20 +1,17 @@
+import math
+import operator
 import os
 import sys
 
 import cv2
 import numpy as np
-import math
-import operator
-
 import pytesseract
 from PyQt5 import QtWidgets, QtGui
+from autocorrect import Speller
 from pytesseract import Output
 
+import des
 import recognition
-import test
-from autocorrect import Speller
-from threading import Thread
-
 
 corrector = Speller(lang='ru')
 
@@ -76,7 +73,7 @@ def create_threads(dir):
                 cut = image[yy:yw, ww:wy]
                 return cut
 
-            image = processImage(cv2.imread("checks/" + files[i]))
+            image = processImage(cv2.imread(dir + "/" + files[i]))
         return image, files[i]
 
 class Main(QtWidgets.QMainWindow, recognition.Ui_MainWindow):
@@ -84,26 +81,47 @@ class Main(QtWidgets.QMainWindow, recognition.Ui_MainWindow):
             super().__init__()
             self.setupUi(self)
             image, src = create_threads(dir)
-            f = open("log/recognition.txt", "a")
             psm = 6
             pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
             d = pytesseract.image_to_string(image, lang='rus+ukr', output_type=Output.STRING, config="--psm " + str(psm))
             self.textBrowser.setText(d)
-            f.write(d)
-            f.close()
-            self.pix = QtGui.QPixmap("checks/" + src)
+            self.pix = QtGui.QPixmap(dir + "/" + src)
             self.label_4.setPixmap(self.pix)
             self.label_4.setScaledContents(1)
 
+class Mainn(QtWidgets.QMainWindow, des.Ui_Form):
 
-def mains(dir):
-        app = QtWidgets.QApplication(sys.argv)
-        windows = Main(dir)
-        windows.show()
-        app.exec_()
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        self.folder.clicked.connect(self.browse_folder)
+        self.start.clicked.connect(self.starts)
+
+    def starts(self):
+        self.win = Main(directory)
+        self.win.show()
+
+    def browse_folder(self):
+        global directory
+        directory = QtWidgets.QFileDialog.getExistingDirectory(self, "Выберите папку")
+        files = []
+        if directory:
+            for file_name in os.listdir(directory):
+                if file_name.split(".")[-1] in ["jpg","png"]:
+                    files.append(file_name)
+        self.len.setText(str(len(files)))
+        if len(files) != 0:
+            self.start.setEnabled(1)
+
+
+def main():
+    app = QtWidgets.QApplication(sys.argv)
+    windows = Mainn()
+    windows.show()
+    app.exec_()
+
 
 
 
 if __name__ == '__main__':
-        mains("checks")
-
+    main()
