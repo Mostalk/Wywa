@@ -1,25 +1,20 @@
 import os
 import sys
-
 import cv2
 import numpy as np
 import math
 import operator
-
 import pytesseract
 from PyQt5 import QtWidgets, QtGui
 from pytesseract import Output
-
 import recognition
-import test
 from autocorrect import Speller
-from threading import Thread
 
-
-corrector = Speller(lang='ru')
 
 def create_threads(dir):
+        images = []
         files = os.listdir(dir)
+        corrector = Speller(lang='ru')
         for i in range(len(files)):
             def morf(image):
                 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -76,24 +71,41 @@ def create_threads(dir):
                 cut = image[yy:yw, ww:wy]
                 return cut
 
-            image = processImage(cv2.imread("checks/" + files[i]))
-        return image, files[i]
+            images.append(processImage(cv2.imread(dir + "/" + files[i])))
+        return images, files[i]
 
 class Main(QtWidgets.QMainWindow, recognition.Ui_MainWindow):
         def __init__(self, dir):
+            global t,i,d, src
+            t = 0
+            texts = []
             super().__init__()
             self.setupUi(self)
-            image, src = create_threads(dir)
-            f = open("log/recognition.txt", "a")
+            images, src = create_threads(dir)
             psm = 6
             pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-            d = pytesseract.image_to_string(image, lang='rus+ukr', output_type=Output.STRING, config="--psm " + str(psm))
-            self.textBrowser.setText(d)
-            f.write(d)
-            f.close()
-            self.pix = QtGui.QPixmap("checks/" + src)
+            for img in images:
+                d = pytesseract.image_to_string(img, lang='rus+ukr', output_type=Output.STRING, config="--psm " + str(psm))
+                texts.append(d)
+            self.textBrowser.setText(d[0])
+            self.pix = QtGui.QPixmap(dir + "/" + src[0])
             self.label_4.setPixmap(self.pix)
             self.label_4.setScaledContents(1)
+            self.n.clicked.connect(self.next)
+            self.b.clicked.connect(self.back)
+
+        def next(self):
+
+                print("kek")
+                self.textBrowser.setText(d[t+1])
+                self.label_4.setPixmap(dir + "/" + src[t+1])
+                self.label_4.setPixmap(self.pix)
+        def back(self):
+
+                print("kek")
+                self.textBrowser.setText(d[t-1])
+                self.label_4.setPixmap(dir + "/" + src[t-1])
+                self.label_4.setPixmap(self.pix)
 
 
 def mains(dir):
@@ -103,7 +115,5 @@ def mains(dir):
         app.exec_()
 
 
-
 if __name__ == '__main__':
         mains("checks")
-
